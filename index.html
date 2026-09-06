@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My Calculator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: #111;
+    color: white;
+    font-family: Arial, sans-serif;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 12px;
+    overflow: hidden;
+}
+
+.calculator {
+    width: min(100%, 390px);
+    max-height: 100dvh;
+    padding: 12px;
+}
+
+/* Display */
+
+.display {
+    width: 100%;
+    height: clamp(100px, 20vh, 150px);
+
+    background: #222;
+    border-radius: 20px;
+
+    padding: 15px;
+
+    margin-bottom: 12px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+
+    text-align: right;
+
+    overflow: hidden;
+}
+
+.expression {
+    min-height: 25px;
+    font-size: clamp(16px, 5vw, 21px);
+    color: #999;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result {
+    margin-top: 5px;
+
+    font-size: clamp(32px, 10vw, 46px);
+    font-weight: bold;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Buttons */
+
+.buttons {
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: clamp(7px, 2vw, 11px);
+}
+
+button {
+    width: 100%;
+    height: clamp(55px, 15vw, 72px);
+
+    border: none;
+    border-radius: 17px;
+
+    background: #333;
+    color: white;
+
+    font-size: clamp(20px, 6vw, 27px);
+    font-weight: bold;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+}
+
+button:active {
+    transform: scale(0.94);
+}
+
+.operator {
+    background: #ff9800;
+}
+
+.clear {
+    background: #e53935;
+}
+
+.equal {
+    background: #4caf50;
+}
+
+.zero {
+    grid-column: span 2;
+}
+
+/* Small phones */
+
+@media (max-height: 600px) {
+
+    .calculator {
+        padding: 5px;
+    }
+
+    .display {
+        height: 85px;
+        margin-bottom: 7px;
+        padding: 10px;
+    }
+
+    button {
+        height: 52px;
+        border-radius: 13px;
+    }
+
+    .buttons {
+        gap: 6px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="calculator">
+
+    <div class="display">
+
+        <div class="expression" id="expression"></div>
+
+        <div class="result" id="result">
+            0
+        </div>
+
+    </div>
+
+
+    <div class="buttons">
+
+        <button class="clear" onclick="clearAll()">AC</button>
+
+        <button onclick="backspace()">⌫</button>
+
+        <button onclick="percent()">%</button>
+
+        <button class="operator" onclick="addOperator('/')">
+            ÷
+        </button>
+
+
+        <button onclick="addNumber('7')">7</button>
+
+        <button onclick="addNumber('8')">8</button>
+
+        <button onclick="addNumber('9')">9</button>
+
+        <button class="operator" onclick="addOperator('*')">
+            ×
+        </button>
+
+
+        <button onclick="addNumber('4')">4</button>
+
+        <button onclick="addNumber('5')">5</button>
+
+        <button onclick="addNumber('6')">6</button>
+
+        <button class="operator" onclick="addOperator('-')">
+            −
+        </button>
+
+
+        <button onclick="addNumber('1')">1</button>
+
+        <button onclick="addNumber('2')">2</button>
+
+        <button onclick="addNumber('3')">3</button>
+
+        <button class="operator" onclick="addOperator('+')">
+            +
+        </button>
+
+
+        <button class="zero" onclick="addNumber('0')">
+            0
+        </button>
+
+        <button onclick="addDecimal()">.</button>
+
+        <button class="equal" onclick="calculate()">
+            =
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let expression = "";
+
+const result =
+    document.getElementById("result");
+
+const expressionBox =
+    document.getElementById("expression");
+
+
+function addNumber(number) {
+
+    expression += number;
+
+    updateDisplay();
+}
+
+
+function addOperator(operator) {
+
+    if (expression === "") return;
+
+    const last =
+        expression.slice(-1);
+
+    if ("+-*/".includes(last)) {
+
+        expression =
+            expression.slice(0, -1);
+    }
+
+    expression += operator;
+
+    updateDisplay();
+}
+
+
+function addDecimal() {
+
+    let parts =
+        expression.split(/[\+\-\*\/]/);
+
+    let currentNumber =
+        parts[parts.length - 1];
+
+    if (currentNumber.includes(".")) {
+        return;
+    }
+
+    if (currentNumber === "") {
+        expression += "0";
+    }
+
+    expression += ".";
+
+    updateDisplay();
+}
+
+
+function calculate() {
+
+    if (expression === "") return;
+
+    try {
+
+        const answer =
+            Function(
+                '"use strict"; return (' +
+                expression +
+                ')'
+            )();
+
+        if (!isFinite(answer)) {
+
+            result.innerText = "Error";
+
+            return;
+        }
+
+        expressionBox.innerText =
+            expression + " =";
+
+        result.innerText =
+            Number(answer.toFixed(10));
+
+        expression =
+            String(Number(answer.toFixed(10)));
+
+    }
+
+    catch {
+
+        result.innerText = "Error";
+    }
+}
+
+
+function clearAll() {
+
+    expression = "";
+
+    expressionBox.innerText = "";
+
+    result.innerText = "0";
+}
+
+
+function backspace() {
+
+    expression =
+        expression.slice(0, -1);
+
+    updateDisplay();
+}
+
+
+function percent() {
+
+    if (expression === "") return;
+
+    try {
+
+        let answer =
+            Function(
+                '"use strict"; return (' +
+                expression +
+                ')'
+            )();
+
+        expression =
+            String(answer / 100);
+
+        updateDisplay();
+
+    }
+
+    catch {
+
+        result.innerText = "Error";
+    }
+}
+
+
+function updateDisplay() {
+
+    expressionBox.innerText =
+        expression;
+
+    if (expression === "") {
+
+        result.innerText = "0";
+
+        return;
+    }
+
+    try {
+
+        let preview =
+            Function(
+                '"use strict"; return (' +
+                expression +
+                ')'
+            )();
+
+        if (isFinite(preview)) {
+
+            result.innerText =
+                preview;
+
+        } else {
+
+            result.innerText = "0";
+        }
+
+    }
+
+    catch {
+
+        result.innerText =
+            expression;
+    }
+}
+
+</script>
+
+</body>
+</html>
